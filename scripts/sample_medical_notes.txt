@@ -1,0 +1,37 @@
+PATIENT MEDICAL RECORD
+
+Patient Name: John Smith
+Date of Birth: 01/15/1985
+Social Security Number: 123-45-6789
+Medical Record Number: MR-123456
+
+Contact Information:
+- Phone: (555) 123-4567
+- Email: john.smith@hospital.com
+- Address: 123 Main Street, Boston, MA 02115
+
+Emergency Contact:
+- Name: Jane Smith
+- Phone: 555-987-6543
+- Email: jane.smith+emergency@example.com
+
+Clinical Notes:
+The patient presented with chest pain. Blood pressure was 140/90.
+Patient reports taking medications including Lisinopril 10mg daily.
+Previous visit on 03/15/2024 showed similar symptoms.
+
+Lab Results:
+- Patient ID: LAB-789012
+- Ordering Physician: Dr. Sarah Johnson
+- Lab URL: https://lab-results.hospital.com/patient/789012
+- Server IP: 192.168.1.100
+
+Insurance Information:
+- Policy Number: INS-456789
+- Group Number: GRP-123
+- Phone: +1-800-555-1234
+
+International Contact:
+- UK Office: +44 20 1234 5678
+- France Contact: +33 1 23 45 67 89
+

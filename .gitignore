@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+*.egg-info/
+*.pytest_cache/
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+models/*.bin
+models/*.pt
+!models/.gitkeep
+
+# MLflow
+mlflow/mlruns/
+mlruns/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Secrets
+.env
+*.key
+credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Context and Setup Files
+CONTEXT.md
+PROJECT_CONTEXT.md
+docs/
+GITHUB_SETUP.md
+scripts/setup_git.sh
