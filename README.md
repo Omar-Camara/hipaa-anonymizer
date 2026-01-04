@@ -142,5 +142,5 @@ hipaa-anonymizer/
 
 ## 📝 License
 
-[Your License Here]
+
 
