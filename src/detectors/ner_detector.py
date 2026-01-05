@@ -225,7 +225,19 @@ class NERDetector:
         doc = self._nlp(text)
         results = []
         
+        # Common abbreviations that should not be treated as PHI
+        common_abbreviations = {
+            'ssn', 'mrn', 'dob', 'pid', 'id', 'mr', 'mrs', 'ms', 'dr',
+            'ph', 'fax', 'tel', 'email', 'e-mail', 'url', 'ip', 'http',
+            'https', 'www', 'api', 'sql', 'xml', 'json', 'csv', 'pdf'
+        }
+        
         for ent in doc.ents:
+            # Skip common abbreviations (often misclassified as organizations)
+            ent_text_lower = ent.text.lower().rstrip(':')
+            if ent_text_lower in common_abbreviations:
+                continue
+            
             # Map spaCy label to HIPAA category
             hipaa_type = self._map_label_to_hipaa(ent.label_)
             
@@ -389,6 +401,16 @@ class NERDetector:
             HIPAA category or None.
         """
         text_lower = entity_text.lower()
+        
+        # Exclude common abbreviations that are not PHI
+        # These are often misclassified as organizations by NER models
+        common_abbreviations = {
+            'ssn', 'mrn', 'dob', 'pid', 'id', 'mr', 'mrs', 'ms', 'dr',
+            'ph', 'fax', 'tel', 'email', 'e-mail', 'url', 'ip', 'http',
+            'https', 'www', 'api', 'sql', 'xml', 'json', 'csv', 'pdf'
+        }
+        if text_lower in common_abbreviations or text_lower.endswith(':'):
+            return None  # Not PHI
         
         # Person name patterns
         if any(title in text_lower for title in ['dr.', 'doctor', 'mr.', 'mrs.', 'ms.', 'professor', 'prof.']):

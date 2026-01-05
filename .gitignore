@@ -40,6 +40,7 @@ PROJECT_CONTEXT.md
 docs/
 GITHUB_SETUP.md
 COMMIT_MESSAGE.md
+COMMIT_TIER3.md
 
 # Scripts
 scripts/setup_git.sh

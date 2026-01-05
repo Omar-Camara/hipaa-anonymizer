@@ -12,7 +12,7 @@ Build a three-tier detection pipeline that can identify and anonymize all 18 HIP
 
 1. **Tier 1: Regex Detector** ✅ - Deterministic patterns (SSN, phone, email, IP, URL)
 2. **Tier 2: NER Detector** ✅ - Contextual understanding (names, locations, dates, organizations)
-3. **Tier 3: SLM Validation** 🚧 - Local Small Language Model validation for ambiguous cases
+3. **Tier 3: SLM Validation** ✅ - Local Small Language Model validation for ambiguous cases
 
 ## 🚀 Quick Start
 
@@ -66,9 +66,23 @@ for result in results:
 from src.pipeline import HIPAAPipeline
 
 pipeline = HIPAAPipeline()
+
+# Detect PHI (Tier 1 & 2)
 text = "Patient information: SSN 123-45-6789, contact (555) 123-4567"
 results = pipeline.detect(text)
 print(results)
+
+# Enable Tier 3 for ambiguous case validation
+pipeline_tier3 = HIPAAPipeline(enable_tier3=True)
+results_validated = pipeline_tier3.detect(text)  # Validates ambiguous detections
+
+# Anonymize PHI
+anonymized = pipeline.anonymize(text, method="safe_harbor")
+print(anonymized)  # "Patient information: SSN [SSN], contact [PHONE]"
+
+# Or use pseudonymization
+pseudonymized = pipeline.anonymize(text, method="pseudonymize")
+print(pseudonymized)  # Consistent pseudonyms for same PHI
 ```
 
 ### Running Tests
@@ -96,13 +110,27 @@ pytest tests/test_regex_detector.py -v
   - 39 comprehensive unit tests
 
 - ✅ **Tier 2: NER Detector** - Complete
+
   - Name detection (person names, organizations)
   - Location detection (cities, states, addresses)
   - Date detection (various formats)
   - Auto-detects best available spaCy model (en_core_web_sm recommended)
   - 14 comprehensive unit tests
-- 🚧 **Tier 3: SLM Validation** - Planned
-- 🚧 **Anonymization Layer** - Planned
+
+- ✅ **Tier 3: SLM Validation** - Complete
+  - Validates ambiguous/low-confidence detections
+  - Refines PHI type classifications
+  - Filters false positives
+  - Supports Phi-3 Mini and LLaMA 3.2 3B models
+  - 12 comprehensive unit tests
+- ✅ **Anonymization Layer** - Complete
+
+  - Safe Harbor method (HIPAA standard)
+  - Pseudonymization (consistent replacements)
+  - Category tagging (HIPAA category mapping)
+  - Multiple anonymization modes (replace, redact, tag)
+  - 15 comprehensive unit tests
+
 - 🚧 **API Interface** - Planned
 
 ## 🔍 What's Detected
@@ -121,6 +149,58 @@ pytest tests/test_regex_detector.py -v
 - **Organizations**: Hospital names, clinics, insurance companies
 - **Locations**: Cities, states, addresses, geographic subdivisions
 - **Dates**: Birth dates, admission dates, procedure dates (various formats)
+
+### Tier 3: SLM Validation
+
+- **Validates ambiguous detections** - Low confidence or overlapping detections
+- **Refines classifications** - Improves PHI type accuracy
+- **Filters false positives** - Removes incorrectly detected PHI
+- **Context-aware** - Uses semantic understanding for edge cases
+
+**Note**: Tier 3 requires `transformers` and `torch`. Models are downloaded automatically on first use (~2-7GB).
+
+## 🔒 Anonymization Methods
+
+The system supports multiple anonymization strategies:
+
+### Safe Harbor (Default)
+
+HIPAA-compliant replacement with generic placeholders:
+
+- `[SSN]`, `[PHONE]`, `[EMAIL]`, `[NAME]`, `[LOCATION]`, etc.
+
+### Pseudonymization
+
+Consistent replacements - same PHI gets same pseudonym:
+
+- Preserves format (SSN format, phone format, etc.)
+- Useful for data analysis while maintaining privacy
+
+### Redaction
+
+Complete removal of PHI from text.
+
+### Tagged Format
+
+Numbered placeholders: `[NAME:1]`, `[SSN:2]`, etc.
+
+**Example:**
+
+```python
+pipeline = HIPAAPipeline()
+
+# Safe Harbor (default)
+anonymized = pipeline.anonymize(text, method="safe_harbor")
+
+# Pseudonymization
+pseudonymized = pipeline.anonymize(text, method="pseudonymize")
+
+# Redaction
+redacted = pipeline.anonymize(text, redact=True)
+
+# Tagged
+tagged = pipeline.anonymize(text, tag=True)
+```
 
 ## 📁 Project Structure
 
@@ -148,11 +228,11 @@ hipaa-anonymizer/
 
 ## 🎯 Next Steps
 
-1. **Implement Tier 3: SLM Validation** - Add local LLM validation for ambiguous cases
-2. **Create Anonymization Layer** - Implement Safe Harbor and pseudonymization
-3. **Build API Interface** - FastAPI endpoints for production use
-4. **Add MLOps** - MLflow tracking, model registry, monitoring
-5. **Fine-tune Models** - Optimize on i2b2 dataset for better accuracy
+1. **Build API Interface** - FastAPI endpoints for production use
+2. **Add MLOps** - MLflow tracking, model registry, monitoring
+3. **Fine-tune Models** - Optimize on i2b2 dataset for better accuracy
+4. **Advanced Privacy Features** - k-anonymity, differential privacy, synthetic data
+5. **Performance Optimization** - Batch processing, caching, model quantization
 
 ## 📊 Performance Targets
 

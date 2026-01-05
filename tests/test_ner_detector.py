@@ -20,7 +20,8 @@ class TestNERDetector:
     
     def test_initialization(self, detector):
         """Test that detector initializes without errors."""
-        assert detector.model_name == "en_core_sci_sm"
+        # Accept either model (en_core_web_sm is preferred, en_core_sci_sm is fallback)
+        assert detector.model_name in ["en_core_web_sm", "en_core_sci_sm"]
         assert detector.use_spacy is True
         assert detector.confidence_threshold == 0.5
         assert detector._initialized is False  # Lazy loading

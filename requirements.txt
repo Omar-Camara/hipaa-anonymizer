@@ -1,8 +1,11 @@
 # Core ML/NLP
-transformers>=4.35.0
-torch>=2.1.0
+transformers>=4.35.0  # Required for Tier 3 (SLM validation)
+torch>=2.1.0  # Required for Tier 3 (SLM validation)
 spacy>=3.7.0
 sentencepiece>=0.1.99
+
+# Optional: For Tier 3 model quantization (faster CPU inference)
+# bitsandbytes>=0.41.0  # Uncomment for 8-bit quantization support
 
 # Biomedical NER (scispaCy)
 # Install with: pip install scispacy
