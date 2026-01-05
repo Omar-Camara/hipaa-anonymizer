@@ -9,6 +9,7 @@ Build a three-tier detection pipeline that can identify and anonymize all 18 HIP
 ## 🏗️ Architecture
 
 **Three-Tier Detection Pipeline:**
+
 1. **Tier 1: Regex Detector** ✅ - Deterministic patterns (SSN, phone, email, IP, URL)
 2. **Tier 2: BioBERT NER** 🚧 - Contextual understanding (names, locations, dates, organizations)
 3. **Tier 3: SLM Validation** 🚧 - Local LLM validation for ambiguous cases
@@ -77,6 +78,7 @@ pytest tests/test_regex_detector.py -v
 ## 📋 Current Status
 
 - ✅ **Tier 1: Regex Detector** - Complete
+
   - SSN detection (multiple formats)
   - Phone numbers (US & international)
   - Email addresses
@@ -142,5 +144,14 @@ hipaa-anonymizer/
 
 ## 📝 License
 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+**Note**: This software is provided for educational and research purposes. When using this software for HIPAA compliance in production environments, ensure you:
 
+- Conduct thorough testing and validation
+- Comply with all applicable healthcare regulations
+- Consult with legal and compliance experts
+- Implement appropriate security measures
+- Regularly audit and monitor the system
+
+The authors and contributors are not responsible for any compliance issues or data breaches resulting from the use of this software.
