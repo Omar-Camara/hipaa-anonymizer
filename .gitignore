@@ -5,6 +5,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 *.egg-info/
 *.pytest_cache/
 
@@ -38,4 +39,11 @@ CONTEXT.md
 PROJECT_CONTEXT.md
 docs/
 GITHUB_SETUP.md
+COMMIT_MESSAGE.md
+
+# Scripts
 scripts/setup_git.sh
+scripts/commit_tier2.sh
+scripts/setup_venv.sh
+scripts/debug_ner.py
+scripts/check_python_env.py

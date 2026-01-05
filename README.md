@@ -86,7 +86,11 @@ pytest tests/test_regex_detector.py -v
   - URLs
   - 39 comprehensive unit tests
 
-- 🚧 **Tier 2: BioBERT NER** - Next step
+- ✅ **Tier 2: BioBERT NER** - Complete
+  - Name detection (person names, organizations)
+  - Location detection (cities, states, addresses)
+  - Date detection (various formats)
+  - Auto-detects best available model (en_core_web_sm recommended)
 - 🚧 **Tier 3: SLM Validation** - Planned
 - 🚧 **Anonymization Layer** - Planned
 - 🚧 **API Interface** - Planned

@@ -4,6 +4,11 @@ torch>=2.1.0
 spacy>=3.7.0
 sentencepiece>=0.1.99
 
+# Biomedical NER (scispaCy)
+# Install with: pip install scispacy
+# Then download model: python -m spacy download en_core_sci_sm
+# scispacy>=0.5.1
+
 # MLOps
 mlflow>=2.9.0
 dvc>=3.30.0
