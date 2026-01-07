@@ -491,4 +491,81 @@ class TestRegexDetector:
         assert 'fax_number' in types
         assert 'certificate_license_number' in types
         assert 'zip_code' in types
+    
+    def test_detect_vin(self, detector):
+        """Test Vehicle Identification Number (VIN) detection."""
+        text = "VIN: 1HGBH41JXMN109186"
+        results = detector.detect_vin(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'vehicle_identifier'
+        assert '1HGBH41JXMN109186' in results[0]['value'].upper()
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_vin_standalone(self, detector):
+        """Test standalone VIN detection (17 alphanumeric characters)."""
+        text = "The vehicle ID is 1HGBH41JXMN109186 and it's registered."
+        results = detector.detect_vin(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'vehicle_identifier'
+    
+    def test_detect_license_plate(self, detector):
+        """Test license plate detection."""
+        text = "License Plate: ABC-1234"
+        results = detector.detect_license_plate(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'vehicle_identifier'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_license_plate_formats(self, detector):
+        """Test license plate detection with various formats."""
+        text = "Plates: ABC-1234, ABC1234, 123-ABC, CA ABC123, NY 123-ABC"
+        results = detector.detect_license_plate(text)
+        
+        assert len(results) >= 2  # Should detect multiple formats
+    
+    def test_detect_device_identifier(self, detector):
+        """Test device identifier detection."""
+        text = "UDI: (01)12345678901234"
+        results = detector.detect_device_identifier(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'device_identifier'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_device_serial_number(self, detector):
+        """Test serial number detection."""
+        text = "Serial #: 123456, SN-ABC123, Device ID: MDI-123456"
+        results = detector.detect_device_identifier(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'device_identifier'
+    
+    def test_detect_biometric(self, detector):
+        """Test biometric identifier detection."""
+        text = "Fingerprint ID: 123456, FP-ABC123"
+        results = detector.detect_biometric(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'biometric_identifier'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_biometric_formats(self, detector):
+        """Test biometric identifier detection with various formats."""
+        text = "Fingerprint ID: 123456, Voiceprint ID: ABC123, Retina ID: 789, DNA ID: XYZ123, Biometric ID: 456"
+        results = detector.detect_biometric(text)
+        
+        assert len(results) >= 2  # Should detect multiple formats
+    
+    def test_detect_all_includes_vehicle_device_biometric(self, detector):
+        """Test that detect_all includes vehicle, device, and biometric identifiers."""
+        text = "VIN: 1HGBH41JXMN109186, Plate: ABC123, UDI: 12345678901234, Fingerprint ID: 123456"
+        results = detector.detect_all(text)
+        
+        types = [r['type'] for r in results]
+        assert 'vehicle_identifier' in types
+        assert 'device_identifier' in types
+        assert 'biometric_identifier' in types
 

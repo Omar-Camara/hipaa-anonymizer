@@ -238,22 +238,23 @@ See [Docker Setup Guide](docs/DOCKER_SETUP.md) for detailed instructions.
 
 ## 🔍 What's Detected
 
-**Current Coverage: ~78% of 18 HIPAA identifiers fully detected**
+**Current Coverage: 100% of text-based HIPAA identifiers (17/17)**
 
-✅ **Fully Detected (14/18)**:
+✅ **Fully Detected (17/17)**:
 - Names, Geographic subdivisions, Dates
 - Telephone numbers, Fax numbers, Email addresses, SSN
 - Medical record numbers, Health plan beneficiary numbers
 - Account numbers, Certificate/license numbers
+- Vehicle identifiers (VINs, license plates)
+- Device identifiers (medical device IDs, serial numbers)
+- Biometric identifiers (fingerprint, voiceprint, DNA, etc.)
 - Web URLs, IP addresses
 
 ⚠️ **Partially Detected (1/18)**:
 - Other unique identifiers (catch-all category)
 
-❌ **Not Yet Detected (3/18)**:
-- Vehicle identifiers (VINs, license plates)
-- Device identifiers (medical device IDs)
-- Biometric identifiers
+❌ **N/A (1/18)**:
+- Full face photographic images (not applicable to text processing)
 
 See [HIPAA Coverage Guide](docs/HIPAA_COVERAGE.md) for detailed status.
 

@@ -34,6 +34,9 @@ class CategoryTagger:
         'account_number': 'account_number',
         'certificate_license_number': 'certificate_license_number',
         'zip_code': 'geographic_subdivision',  # Zip codes are geographic subdivisions
+        'vehicle_identifier': 'vehicle_identifier',
+        'device_identifier': 'device_identifier',
+        'biometric_identifier': 'biometric_identifier',
     }
     
     # HIPAA Safe Harbor requirements by category
@@ -52,6 +55,9 @@ class CategoryTagger:
         'account_number': 'remove',
         'certificate_license_number': 'remove',
         'zip_code': 'remove',  # Zip codes are geographic subdivisions
+        'vehicle_identifier': 'remove',
+        'device_identifier': 'remove',
+        'biometric_identifier': 'remove',
     }
     
     def tag(self, detections: List[Dict]) -> List[Dict]:

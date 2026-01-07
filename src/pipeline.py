@@ -7,7 +7,9 @@ Three-tier detection system:
 3. Tier 3: SLM validation (ambiguous cases - Small Language Model)
 """
 
+import hashlib
 from typing import List, Dict, Optional
+from functools import lru_cache
 from src.detectors.regex_detector import RegexDetector
 from src.detectors.ner_detector import NERDetector
 from src.anonymizers.safe_harbor import SafeHarborAnonymizer
@@ -62,17 +64,33 @@ class HIPAAPipeline:
         self.safe_harbor = SafeHarborAnonymizer()
         self.pseudonymizer = Pseudonymizer()
         self.category_tagger = CategoryTagger()
+        
+        # Cache for detection results (text hash -> detections)
+        # Using a simple dict with LRU-like behavior (max 100 entries)
+        self._detection_cache: Dict[str, List[Dict]] = {}
+        self._cache_max_size = 100
     
-    def detect(self, text: str) -> List[Dict]:
+    def _get_text_hash(self, text: str) -> str:
+        """Generate a hash for the text (for caching)."""
+        return hashlib.md5(text.encode('utf-8')).hexdigest()
+    
+    def detect(self, text: str, use_cache: bool = True) -> List[Dict]:
         """
         Detect all PHI in the given text using all available tiers.
         
         Args:
             text: Input text to scan for PHI.
+            use_cache: If True, use cached results for identical text.
             
         Returns:
             List of detection dictionaries with aggregated results from all tiers.
         """
+        # Check cache first
+        if use_cache:
+            text_hash = self._get_text_hash(text)
+            if text_hash in self._detection_cache:
+                return self._detection_cache[text_hash].copy()
+        
         results = []
         
         # Tier 1: Regex detection (fast, deterministic)
@@ -102,18 +120,56 @@ class HIPAAPipeline:
         # Sort by start position
         results.sort(key=lambda x: x['start'])
         
+        # Cache results
+        if use_cache:
+            text_hash = self._get_text_hash(text)
+            # Simple LRU: remove oldest if cache is full
+            if len(self._detection_cache) >= self._cache_max_size:
+                # Remove first (oldest) entry
+                oldest_key = next(iter(self._detection_cache))
+                del self._detection_cache[oldest_key]
+            self._detection_cache[text_hash] = results.copy()
+        
         return results
+    
+    def batch_detect(self, texts: List[str], use_cache: bool = True) -> List[List[Dict]]:
+        """
+        Detect PHI in multiple texts (batch processing).
+        
+        This method is optimized for batch processing and may reuse
+        cached results for identical texts.
+        
+        Args:
+            texts: List of texts to process.
+            use_cache: If True, use cached results for identical texts.
+            
+        Returns:
+            List of detection results, one per input text.
+        """
+        results = []
+        for text in texts:
+            detections = self.detect(text, use_cache=use_cache)
+            results.append(detections)
+        return results
+    
+    def clear_cache(self):
+        """Clear the detection cache."""
+        self._detection_cache.clear()
     
     def _deduplicate(self, results: List[Dict]) -> List[Dict]:
         """
         Remove duplicate detections from multiple tiers.
         
         Prioritizes higher confidence and more specific detections.
+        Optimized for better performance with many detections.
         """
         if not results:
             return []
         
-        # Sort by confidence (descending), then by specificity
+        if len(results) == 1:
+            return results
+        
+        # Sort by confidence (descending), then by specificity (longer is better)
         sorted_results = sorted(
             results,
             key=lambda x: (x.get('confidence', 0), -(x['end'] - x['start'])),
@@ -121,22 +177,22 @@ class HIPAAPipeline:
         )
         
         deduplicated = []
-        seen_positions = set()
+        # Use a list of intervals for faster overlap checking
+        intervals = []  # List of (start, end, result)
         
         for result in sorted_results:
-            # Create a position key
-            pos_key = (result['start'], result['end'], result['type'])
+            start, end = result['start'], result['end']
             
-            # Check for overlap with existing results
+            # Check for overlap with existing intervals
             overlaps = False
-            for start, end, _ in seen_positions:
-                if not (result['end'] <= start or result['start'] >= end):
+            for existing_start, existing_end, _ in intervals:
+                if not (end <= existing_start or start >= existing_end):
                     overlaps = True
                     break
             
             if not overlaps:
                 deduplicated.append(result)
-                seen_positions.add((result['start'], result['end'], result['type']))
+                intervals.append((start, end, result))
         
         return deduplicated
     

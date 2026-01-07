@@ -250,6 +250,8 @@ async def batch_detect(texts: list[str], enable_tier2: bool = True, enable_tier3
     """
     Batch detect PHI in multiple texts.
     
+    Uses optimized batch processing with caching for better performance.
+    
     Args:
         texts: List of texts to process
         enable_tier2: Enable Tier 2 (NER)
@@ -261,9 +263,11 @@ async def batch_detect(texts: list[str], enable_tier2: bool = True, enable_tier3
     try:
         pipeline = get_pipeline(enable_tier2=enable_tier2, enable_tier3=enable_tier3)
         
+        # Use optimized batch_detect method
+        batch_results = pipeline.batch_detect(texts, use_cache=True)
+        
         results = []
-        for text in texts:
-            detections = pipeline.detect(text)
+        for text, detections in zip(texts, batch_results):
             results.append({
                 "text": text,
                 "detections": [DetectionResponse(**d) for d in detections],

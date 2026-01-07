@@ -51,6 +51,9 @@ class SafeHarborAnonymizer:
         'account_number': '[ACCOUNT]',
         'certificate_license_number': '[LICENSE]',
         'zip_code': '[ZIP_CODE]',
+        'vehicle_identifier': '[VEHICLE_ID]',
+        'device_identifier': '[DEVICE_ID]',
+        'biometric_identifier': '[BIOMETRIC_ID]',
     }
     
     def __init__(self, replacement_map: Optional[Dict[str, str]] = None):

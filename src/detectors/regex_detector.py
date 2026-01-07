@@ -6,7 +6,7 @@ including SSN, phone numbers, email addresses, IP addresses, and URLs.
 """
 
 import re
-from typing import List, Dict, Pattern, Optional
+from typing import List, Dict, Pattern, Optional, Any
 
 
 class RegexDetector:
@@ -87,7 +87,7 @@ class RegexDetector:
         # Medical Record Number patterns
         # Formats: MR-123456, MRN-789, Medical Record #123, MR#456, MRN: 789
         self._mrn_pattern = re.compile(
-            r'\b(?:MRN?|Medical\s+Record\s*#?)[\s:.-]?\d{4,12}\b',
+            r'\b(?:MRN?|Medical\s+Record\s*#?)[\s:.-]+?\d{3,12}\b',
             re.IGNORECASE
         )
         
@@ -95,8 +95,8 @@ class RegexDetector:
         # Formats: Member ID: 123456, Policy #789, Group #456, Ins ID: 123
         # Insurance member IDs, policy numbers, group numbers
         self._health_plan_pattern = re.compile(
-            r'\b(?:Member\s+ID|Policy\s*#?|Group\s*#?|Ins(urance)?\s+ID|Beneficiary\s+ID)[\s:.-]?'
-            r'[A-Z0-9]{6,20}\b',
+            r'\b(?:Member\s+ID|Policy\s*#?|Group\s*#?|Ins(urance)?\s+ID|Beneficiary\s+ID)[\s:.-]+'
+            r'[A-Z0-9]{3,20}\b',
             re.IGNORECASE
         )
         
@@ -104,7 +104,7 @@ class RegexDetector:
         # Formats: Account #123456, Acct: 789, Account Number: 456789
         # Generic numeric sequences in account contexts
         self._account_pattern = re.compile(
-            r'\b(?:Account\s*#?|Acct\.?\s*#?|Account\s+Number)[\s:.-]?\d{6,20}\b',
+            r'\b(?:Account\s*#?|Acct\.?\s*#?|Account\s+Number)[\s:.-]?\d{3,20}\b',
             re.IGNORECASE
         )
         
@@ -126,8 +126,75 @@ class RegexDetector:
             r'\b(?:DL|License|Lic\.?|Cert\.?|Certificate)[\s#:.-]?[A-Z0-9]{4,15}\b',
             re.IGNORECASE
         )
+        
+        # Vehicle Identifier Number (VIN) pattern
+        # VINs are exactly 17 alphanumeric characters (excluding I, O, Q to avoid confusion)
+        # Format: 17 characters, typically uppercase
+        self._vin_pattern = re.compile(
+            r'\b(?:VIN|Vehicle\s+ID|Vehicle\s+Identifier)[\s:.-]?[A-HJ-NPR-Z0-9]{17}\b|'
+            r'\b[A-HJ-NPR-Z0-9]{17}\b(?=\s*(?:VIN|vehicle|car|truck|auto))?',
+            re.IGNORECASE
+        )
+        
+        # License Plate patterns (US state formats)
+        # Common formats: ABC-1234, ABC 1234, ABC1234, 123-ABC, 123 ABC, 123ABC
+        # State abbreviations: 2-3 letters followed by numbers, or numbers followed by letters
+        # Also catches state abbreviation + plate: CA ABC123, NY 123-ABC
+        # Only match with explicit keywords or state abbreviation to avoid false positives
+        plate_format1 = r'[A-Z]{2,3}[- ]?\d{2,4}[A-Z]{0,2}'  # ABC-1234, ABC1234 (at least 2 letters, 2 digits)
+        plate_format2 = r'\d{2,4}[- ]?[A-Z]{2,3}'  # 123-ABC, 123ABC (at least 2 digits, 2 letters)
+        # State plate: require at least one digit in the plate number
+        state_plate = r'\b[A-Z]{2}\s+(?=[A-Z0-9]*\d)[A-Z0-9]{2,7}(?:[- ]?[A-Z0-9]{1,7})?\b'  # CA ABC123, NY 123-ABC
+        # Only match with explicit keywords (License Plate, Plate #, Tag #) or state abbreviation
+        self._license_plate_pattern = re.compile(
+            r'\b(?:License\s+Plate|Plate\s*#?|Tag\s*#?)[\s:.-]+' +
+            r'(?:' + plate_format1 + r'|' + plate_format2 + r')|' +
+            state_plate,
+            re.IGNORECASE
+        )
+        
+        # Device Identifier patterns
+        # UDI (Unique Device Identifier) formats: typically alphanumeric with hyphens
+        # Common formats: (01)12345678901234, 12345678901234, UDI-12345678901234
+        # Serial numbers: SN-123456, Serial #789, S/N: ABC123
+        # Medical device IDs: MDI-123456, Device ID: ABC123
+        # Require explicit keywords or longer sequences to avoid false positives
+        udi_pattern = r'(?:\(01\))?[A-Z0-9]{8,20}(?:[- ]?[A-Z0-9]{4,8})*'
+        serial_pattern = r'(?:SN|Serial\s*#?|S/N|S\.N\.)[\s:.-]+[A-Z0-9]{4,20}'
+        device_id_pattern = r'(?:Device\s+ID|MDI|Device\s+Serial)[\s:.-]+[A-Z0-9]{4,20}'
+        self._device_identifier_pattern = re.compile(
+            r'\b(?:UDI|Unique\s+Device\s+Identifier)[\s:.-]+' + udi_pattern + r'|' +
+            r'\b' + udi_pattern + r'(?=\s*(?:UDI|device))|' +
+            r'\b' + serial_pattern + r'|' +
+            r'\b' + device_id_pattern + r'',
+            re.IGNORECASE
+        )
+        
+        # Biometric Identifier patterns
+        # Text representations of biometric data (rare in text)
+        # Fingerprint patterns: FP-123456, Fingerprint ID: ABC123
+        # Voiceprint patterns: Voiceprint ID: 123456, VP-ABC123
+        # Retina/Iris patterns: Retina ID: 123456, Iris ID: ABC123
+        # DNA patterns: DNA ID: 123456, DNA Sequence: ABC123
+        # Biometric template IDs: Biometric ID: 123456, Bio ID: ABC123
+        biometric_patterns = [
+            r'(?:Fingerprint|FP|Finger\s+Print)[\s:.-]+(?:ID|Identifier)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Fingerprint|FP|Finger\s+Print)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Voiceprint|VP|Voice\s+Print)[\s:.-]+(?:ID|Identifier)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Voiceprint|VP|Voice\s+Print)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Retina|Iris|Eye\s+Scan)[\s:.-]+(?:ID|Identifier)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Retina|Iris|Eye\s+Scan)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:DNA|Genetic)[\s:.-]+(?:ID|Identifier|Sequence)[\s:.-]+[A-Z0-9]{3,30}',
+            r'(?:DNA|Genetic)[\s:.-]+[A-Z0-9]{3,30}',
+            r'(?:Biometric|Bio)[\s:.-]+(?:ID|Identifier|Template)[\s:.-]+[A-Z0-9]{3,20}',
+            r'(?:Biometric|Bio)[\s:.-]+[A-Z0-9]{3,20}',
+        ]
+        self._biometric_pattern = re.compile(
+            r'\b(?:' + '|'.join(biometric_patterns) + r')\b',
+            re.IGNORECASE
+        )
     
-    def detect_all(self, text: str) -> List[Dict[str, any]]:
+    def detect_all(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect all PHI types in the given text.
         
@@ -155,12 +222,16 @@ class RegexDetector:
         results.extend(self.detect_license(text))
         results.extend(self.detect_date(text))
         results.extend(self.detect_zip(text))
+        results.extend(self.detect_vin(text))
+        results.extend(self.detect_license_plate(text))
+        results.extend(self.detect_device_identifier(text))
+        results.extend(self.detect_biometric(text))
         
         # Sort by start position for consistent ordering
         results.sort(key=lambda x: x['start'])
         return results
     
-    def detect_ssn(self, text: str) -> List[Dict[str, any]]:
+    def detect_ssn(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Social Security Numbers in the text.
         
@@ -191,7 +262,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_phone(self, text: str) -> List[Dict[str, any]]:
+    def detect_phone(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect phone numbers in the text.
         
@@ -221,7 +292,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_email(self, text: str) -> List[Dict[str, any]]:
+    def detect_email(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect email addresses in the text.
         
@@ -243,7 +314,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_ip(self, text: str) -> List[Dict[str, any]]:
+    def detect_ip(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect IP addresses (IPv4 and IPv6) in the text.
         
@@ -279,7 +350,7 @@ class RegexDetector:
         
         return results
     
-    def detect_url(self, text: str) -> List[Dict[str, any]]:
+    def detect_url(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect URLs in the text.
         
@@ -307,7 +378,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_mrn(self, text: str) -> List[Dict[str, any]]:
+    def detect_mrn(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Medical Record Numbers in the text.
         
@@ -336,7 +407,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_health_plan(self, text: str) -> List[Dict[str, any]]:
+    def detect_health_plan(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Health Plan Beneficiary Numbers in the text.
         
@@ -364,7 +435,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_account(self, text: str) -> List[Dict[str, any]]:
+    def detect_account(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Account Numbers in the text.
         
@@ -391,7 +462,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_fax(self, text: str) -> List[Dict[str, any]]:
+    def detect_fax(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Fax Numbers in the text.
         
@@ -418,7 +489,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_license(self, text: str) -> List[Dict[str, any]]:
+    def detect_license(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect Certificate/License Numbers in the text.
         
@@ -446,7 +517,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_date(self, text: str) -> List[Dict[str, any]]:
+    def detect_date(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect date patterns in MM/DD/YYYY format.
         
@@ -475,7 +546,7 @@ class RegexDetector:
             })
         return results
     
-    def detect_zip(self, text: str) -> List[Dict[str, any]]:
+    def detect_zip(self, text: str) -> List[Dict[str, Any]]:
         """
         Detect US zip codes in the text.
         
@@ -497,6 +568,129 @@ class RegexDetector:
             results.append({
                 'type': 'zip_code',
                 'value': zip_value,
+                'start': match.start(),
+                'end': match.end(),
+                'confidence': 1.0,
+                'source': 'regex'
+            })
+        return results
+    
+    def detect_vin(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Detect Vehicle Identification Numbers (VINs) in the text.
+        
+        Supports formats:
+        - VIN: 1HGBH41JXMN109186
+        - Vehicle ID: 1HGBH41JXMN109186
+        - 1HGBH41JXMN109186 (standalone, 17 alphanumeric chars)
+        
+        Args:
+            text: Input text to scan for VINs.
+            
+        Returns:
+            List of detection dictionaries with VIN matches.
+        """
+        results = []
+        for match in self._vin_pattern.finditer(text):
+            vin_value = match.group(0)
+            # Extract just the VIN if it's part of a longer match
+            vin_match = re.search(r'[A-HJ-NPR-Z0-9]{17}', vin_value, re.IGNORECASE)
+            if vin_match:
+                vin_value = vin_match.group(0).upper()
+            results.append({
+                'type': 'vehicle_identifier',
+                'value': vin_value,
+                'start': match.start(),
+                'end': match.end(),
+                'confidence': 1.0,
+                'source': 'regex'
+            })
+        return results
+    
+    def detect_license_plate(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Detect license plate numbers in the text.
+        
+        Supports formats:
+        - ABC-1234, ABC 1234, ABC1234
+        - 123-ABC, 123 ABC, 123ABC
+        - CA ABC123, NY 123-ABC
+        - License Plate: ABC123
+        - Plate #: 123ABC
+        
+        Args:
+            text: Input text to scan for license plates.
+            
+        Returns:
+            List of detection dictionaries with license plate matches.
+        """
+        results = []
+        for match in self._license_plate_pattern.finditer(text):
+            plate_value = match.group(0)
+            results.append({
+                'type': 'vehicle_identifier',
+                'value': plate_value,
+                'start': match.start(),
+                'end': match.end(),
+                'confidence': 1.0,
+                'source': 'regex'
+            })
+        return results
+    
+    def detect_device_identifier(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Detect device identifiers and serial numbers in the text.
+        
+        Supports formats:
+        - UDI: (01)12345678901234
+        - Serial #: 123456
+        - SN-ABC123
+        - Device ID: MDI-123456
+        - Medical device serial numbers
+        
+        Args:
+            text: Input text to scan for device identifiers.
+            
+        Returns:
+            List of detection dictionaries with device identifier matches.
+        """
+        results = []
+        for match in self._device_identifier_pattern.finditer(text):
+            device_value = match.group(0)
+            results.append({
+                'type': 'device_identifier',
+                'value': device_value,
+                'start': match.start(),
+                'end': match.end(),
+                'confidence': 1.0,
+                'source': 'regex'
+            })
+        return results
+    
+    def detect_biometric(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Detect biometric identifiers in the text.
+        
+        Supports formats:
+        - Fingerprint ID: 123456
+        - FP-ABC123
+        - Voiceprint ID: 123456
+        - Retina ID: ABC123
+        - DNA ID: 123456
+        - Biometric ID: ABC123
+        
+        Args:
+            text: Input text to scan for biometric identifiers.
+            
+        Returns:
+            List of detection dictionaries with biometric identifier matches.
+        """
+        results = []
+        for match in self._biometric_pattern.finditer(text):
+            biometric_value = match.group(0)
+            results.append({
+                'type': 'biometric_identifier',
+                'value': biometric_value,
                 'start': match.start(),
                 'end': match.end(),
                 'confidence': 1.0,
