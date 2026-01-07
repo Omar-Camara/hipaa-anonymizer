@@ -38,6 +38,7 @@ class SafeHarborAnonymizer:
     REPLACEMENTS = {
         'ssn': '[SSN]',
         'phone': '[PHONE]',
+        'fax_number': '[FAX]',
         'email': '[EMAIL]',
         'ip': '[IP_ADDRESS]',
         'url': '[URL]',
@@ -46,7 +47,10 @@ class SafeHarborAnonymizer:
         'date': '[DATE]',
         'organization': '[ORGANIZATION]',
         'medical_record_number': '[MRN]',
+        'health_plan_beneficiary_number': '[HEALTH_PLAN_ID]',
         'account_number': '[ACCOUNT]',
+        'certificate_license_number': '[LICENSE]',
+        'zip_code': '[ZIP_CODE]',
     }
     
     def __init__(self, replacement_map: Optional[Dict[str, str]] = None):
@@ -81,6 +85,18 @@ class SafeHarborAnonymizer:
             start = detection['start']
             end = detection['end']
             phi_type = detection['type']
+            
+            # Handle name prefixes (Dr., Mr., Mrs., Ms., etc.) - extend detection to include prefix
+            if phi_type == 'name' and start >= 3:
+                # Check for common prefixes before the name
+                prefixes = ['dr. ', 'mr. ', 'mrs. ', 'ms. ', 'prof. ', 'professor ']
+                for prefix in prefixes:
+                    prefix_len = len(prefix)
+                    if start >= prefix_len:
+                        prefix_start = start - prefix_len
+                        if text[prefix_start:start].lower() == prefix:
+                            start = prefix_start
+                            break
             
             # Get replacement text
             replacement = self._get_replacement(phi_type)
@@ -132,6 +148,19 @@ class SafeHarborAnonymizer:
         for detection in sorted_detections:
             start = detection['start']
             end = detection['end']
+            phi_type = detection.get('type', '')
+            
+            # Handle name prefixes (Dr., Mr., Mrs., Ms., etc.) - extend detection to include prefix
+            if phi_type == 'name' and start >= 3:
+                # Check for common prefixes before the name
+                prefixes = ['dr. ', 'mr. ', 'mrs. ', 'ms. ', 'prof. ', 'professor ']
+                for prefix in prefixes:
+                    prefix_len = len(prefix)
+                    if start >= prefix_len:
+                        prefix_start = start - prefix_len
+                        if text[prefix_start:start].lower() == prefix:
+                            start = prefix_start
+                            break
             
             # Remove the PHI (replace with empty string)
             anonymized = anonymized[:start] + anonymized[end:]
@@ -162,6 +191,18 @@ class SafeHarborAnonymizer:
             start = detection['start']
             end = detection['end']
             phi_type = detection['type']
+            
+            # Handle name prefixes (Dr., Mr., Mrs., Ms., etc.) - extend detection to include prefix
+            if phi_type == 'name' and start >= 3:
+                # Check for common prefixes before the name
+                prefixes = ['dr. ', 'mr. ', 'mrs. ', 'ms. ', 'prof. ', 'professor ']
+                for prefix in prefixes:
+                    prefix_len = len(prefix)
+                    if start >= prefix_len:
+                        prefix_start = start - prefix_len
+                        if text[prefix_start:start].lower() == prefix:
+                            start = prefix_start
+                            break
             
             # Count occurrences of this type
             type_counts[phi_type] = type_counts.get(phi_type, 0) + 1

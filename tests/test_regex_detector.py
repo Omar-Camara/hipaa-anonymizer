@@ -408,4 +408,87 @@ class TestRegexDetector:
         assert len(results) == 2
         assert all(r['type'] == 'email' for r in results)
         assert all('@' in r['value'] for r in results)
+    
+    def test_detect_mrn(self, detector):
+        """Test Medical Record Number detection."""
+        text = "Medical Record: MR-123456"
+        results = detector.detect_mrn(text)
+        
+        assert len(results) == 1
+        assert results[0]['type'] == 'medical_record_number'
+        assert 'MR-123456' in results[0]['value']
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_mrn_variants(self, detector):
+        """Test MRN detection with various formats."""
+        text = "MRN-789, Medical Record #123, MR#456"
+        results = detector.detect_mrn(text)
+        
+        assert len(results) >= 2  # Should detect at least 2 formats
+    
+    def test_detect_health_plan(self, detector):
+        """Test Health Plan Beneficiary Number detection."""
+        text = "Member ID: 123456, Policy #789"
+        results = detector.detect_health_plan(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'health_plan_beneficiary_number'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_account(self, detector):
+        """Test Account Number detection."""
+        text = "Account #123456, Acct: 789012"
+        results = detector.detect_account(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'account_number'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_fax(self, detector):
+        """Test Fax Number detection."""
+        text = "Fax: (555) 123-4567, (555) 987-6543 fax"
+        results = detector.detect_fax(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'fax_number'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_license(self, detector):
+        """Test Certificate/License Number detection."""
+        text = "DL-1234567, License #789, MD-12345"
+        results = detector.detect_license(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'certificate_license_number'
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_zip(self, detector):
+        """Test Zip Code detection."""
+        text = "Address: 123 Main St, Boston, MA 02118"
+        results = detector.detect_zip(text)
+        
+        assert len(results) >= 1
+        assert results[0]['type'] == 'zip_code'
+        assert '02118' in results[0]['value']
+        assert results[0]['confidence'] == 1.0
+    
+    def test_detect_zip_formats(self, detector):
+        """Test Zip Code detection with various formats."""
+        text = "Zips: 12345, 12345-6789, MA 02118, CA 90210-1234"
+        results = detector.detect_zip(text)
+        
+        assert len(results) >= 2  # Should detect multiple formats
+    
+    def test_detect_all_includes_new_types(self, detector):
+        """Test that detect_all includes new identifier types."""
+        text = "MR-123456, Member ID: 789, Account #456, Fax: (555) 123-4567, DL-12345, MA 02118"
+        results = detector.detect_all(text)
+        
+        types = [r['type'] for r in results]
+        assert 'medical_record_number' in types
+        assert 'health_plan_beneficiary_number' in types
+        assert 'account_number' in types
+        assert 'fax_number' in types
+        assert 'certificate_license_number' in types
+        assert 'zip_code' in types
 

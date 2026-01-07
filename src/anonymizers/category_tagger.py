@@ -21,6 +21,7 @@ class CategoryTagger:
         # Direct mappings
         'ssn': 'social_security_number',
         'phone': 'telephone_number',
+        'fax_number': 'fax_number',
         'email': 'email_address',
         'ip': 'ip_address',
         'url': 'web_url',
@@ -29,13 +30,17 @@ class CategoryTagger:
         'date': 'date',
         'organization': 'name',  # Organization names are also names
         'medical_record_number': 'medical_record_number',
+        'health_plan_beneficiary_number': 'health_plan_beneficiary_number',
         'account_number': 'account_number',
+        'certificate_license_number': 'certificate_license_number',
+        'zip_code': 'geographic_subdivision',  # Zip codes are geographic subdivisions
     }
     
     # HIPAA Safe Harbor requirements by category
     SAFE_HARBOR_REQUIREMENTS = {
         'social_security_number': 'remove',
         'telephone_number': 'remove',
+        'fax_number': 'remove',
         'email_address': 'remove',
         'ip_address': 'remove',
         'web_url': 'remove',
@@ -43,7 +48,10 @@ class CategoryTagger:
         'geographic_subdivision': 'remove_if_smaller_than_state',
         'date': 'remove_except_year',
         'medical_record_number': 'remove',
+        'health_plan_beneficiary_number': 'remove',
         'account_number': 'remove',
+        'certificate_license_number': 'remove',
+        'zip_code': 'remove',  # Zip codes are geographic subdivisions
     }
     
     def tag(self, detections: List[Dict]) -> List[Dict]:

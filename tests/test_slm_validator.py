@@ -279,9 +279,20 @@ class TestSLMValidator:
         """Test availability check."""
         validator = SLMValidator.__new__(SLMValidator)
         validator._pipeline = None
+        validator._llama_model = None
+        validator.model_format = 'transformers'  # Initialize model_format
         
         assert validator.is_available() is False
         
         validator._pipeline = MagicMock()
+        assert validator.is_available() is True
+        
+        # Test GGUF format
+        validator.model_format = 'gguf'
+        validator._pipeline = None
+        validator._llama_model = None
+        assert validator.is_available() is False
+        
+        validator._llama_model = MagicMock()
         assert validator.is_available() is True
 

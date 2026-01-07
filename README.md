@@ -98,6 +98,90 @@ pytest --cov=src --cov-report=html
 pytest tests/test_regex_detector.py -v
 ```
 
+### Using the API
+
+```bash
+# Start the FastAPI server
+uvicorn src.api.main:app --reload --port 8000
+
+# Access interactive documentation
+# Open http://localhost:8000/docs in your browser
+
+# Access Gradio UI (integrated)
+# Open http://localhost:8000/ui in your browser
+
+# Test the API
+python scripts/test_api.py
+```
+
+**API Endpoints:**
+
+- `GET /health` - Health check and tier availability
+- `POST /detect` - Detect PHI in text
+- `POST /anonymize` - Anonymize text with PHI
+- `POST /batch/detect` - Batch detection
+- `POST /batch/anonymize` - Batch anonymization
+- `GET /ui` - Gradio web interface
+
+See [API Guide](docs/API_GUIDE.md) for detailed documentation.
+
+### Using the Gradio UI
+
+**Option 1: Standalone**
+```bash
+# Launch standalone Gradio UI
+python scripts/run_gradio.py
+
+# Access at: http://localhost:7860
+```
+
+**Option 2: Integrated with API**
+```bash
+# Start FastAPI server (UI automatically mounted)
+uvicorn src.api.main:app --reload --port 8000
+
+# Access UI at: http://localhost:8000/ui
+```
+
+The Gradio UI provides:
+- 🔍 **Detect PHI**: Interactive detection with visual results
+- 🛡️ **Anonymize**: Multiple anonymization methods
+- 📊 **Statistics**: PHI detection breakdowns
+- 📝 **Examples**: Pre-loaded example texts
+
+See [Gradio UI Guide](docs/GRADIO_UI.md) for detailed documentation.
+
+### Using Docker
+
+**Quick Start with Docker Compose:**
+```bash
+# Build and start the container
+docker compose up --build
+
+# Access the API
+# http://localhost:8000/docs
+```
+
+**Using Docker directly:**
+```bash
+# Build the image
+docker build -t hipaa-anonymizer:latest .
+
+# Run the container
+docker run -d --name hipaa-anonymizer -p 8000:8000 hipaa-anonymizer:latest
+```
+
+**Production deployment:**
+```bash
+# Build production image
+docker build -f Dockerfile.prod -t hipaa-anonymizer:prod .
+
+# Run with production settings
+docker run -d --name hipaa-anonymizer-prod -p 8000:8000 hipaa-anonymizer:prod
+```
+
+See [Docker Setup Guide](docs/DOCKER_SETUP.md) for detailed instructions.
+
 ## 📋 Current Status
 
 - ✅ **Tier 1: Regex Detector** - Complete
@@ -131,9 +215,49 @@ pytest tests/test_regex_detector.py -v
   - Multiple anonymization modes (replace, redact, tag)
   - 15 comprehensive unit tests
 
-- 🚧 **API Interface** - Planned
+- ✅ **API Interface** - Complete
+  - FastAPI REST endpoints
+  - Detection and anonymization endpoints
+  - Batch processing support
+  - Interactive API documentation
+  - Comprehensive test suite
+
+- ✅ **Gradio UI** - Complete
+  - User-friendly web interface
+  - PHI detection with visual results
+  - Multiple anonymization methods
+  - Statistics and metadata display
+  - Example texts and documentation
+  - Integrated with FastAPI or standalone
+
+- ✅ **Docker Deployment** - Complete
+  - Dockerfile for development and production
+  - Docker Compose for easy local development
+  - Production-optimized multi-stage builds
+  - Health checks and security best practices
 
 ## 🔍 What's Detected
+
+**Current Coverage: ~78% of 18 HIPAA identifiers fully detected**
+
+✅ **Fully Detected (14/18)**:
+- Names, Geographic subdivisions, Dates
+- Telephone numbers, Fax numbers, Email addresses, SSN
+- Medical record numbers, Health plan beneficiary numbers
+- Account numbers, Certificate/license numbers
+- Web URLs, IP addresses
+
+⚠️ **Partially Detected (1/18)**:
+- Other unique identifiers (catch-all category)
+
+❌ **Not Yet Detected (3/18)**:
+- Vehicle identifiers (VINs, license plates)
+- Device identifiers (medical device IDs)
+- Biometric identifiers
+
+See [HIPAA Coverage Guide](docs/HIPAA_COVERAGE.md) for detailed status.
+
+## 🔍 What's Detected (Details)
 
 ### Tier 1: Regex Detector
 

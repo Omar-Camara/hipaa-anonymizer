@@ -247,21 +247,61 @@ class NERDetector:
                 if not hipaa_type:
                     continue  # Skip if we can't classify it
             
+            # Filter false positives
+            if hipaa_type == 'date':
+                # Skip age expressions like "68-year-old"
+                if re.search(r'\d+\s*-\s*year\s*-\s*old', ent.text, re.IGNORECASE):
+                    continue
+                # Skip zip codes (state + zip like "MA 02118")
+                if re.match(r'^[A-Z]{2}\s+\d{5}$', ent.text):
+                    continue
+                # Skip standalone years (already handled by date regex if needed)
+                if re.match(r'^\d{4}$', ent.text.strip()):
+                    continue
+            
+            if hipaa_type == 'name':
+                # Skip common false positives
+                false_positive_names = {'physician', 'patient', 'doctor', 'nurse', 'nurse practitioner'}
+                if ent_text_lower in false_positive_names:
+                    continue
+                # Remove common prefixes if present (keep the name part)
+                # Common prefixes: Dr., Mr., Mrs., Ms., Prof., Professor
+                prefixes = ['Dr. ', 'Mr. ', 'Mrs. ', 'Ms. ', 'Prof. ', 'Professor ']
+                ent_text = ent.text
+                ent_start = ent.start_char
+                for prefix in prefixes:
+                    if ent.text.startswith(prefix):
+                        ent_text = ent.text[len(prefix):]  # Remove prefix
+                        ent_start = ent.start_char + len(prefix)
+                        break
+            
             if hipaa_type and ent.start_char < len(text):
                 # Calculate confidence (spaCy doesn't provide confidence by default)
                 # Use a heuristic based on entity length and context
                 confidence = self._calculate_confidence(ent, text)
                 
                 if confidence >= self.confidence_threshold:
-                    results.append({
-                        'type': hipaa_type,
-                        'value': ent.text,
-                        'start': ent.start_char,
-                        'end': ent.end_char,
-                        'confidence': confidence,
-                        'source': 'ner',
-                        'subtype': self._get_subtype(ent.label_, hipaa_type)
-                    })
+                    # Use adjusted text/position for names with prefixes
+                    if hipaa_type == 'name' and ent_text != ent.text:
+                        results.append({
+                            'type': hipaa_type,
+                            'value': ent_text,
+                            'start': ent_start,
+                            'end': ent.end_char,
+                            'confidence': confidence,
+                            'source': 'ner',
+                            'subtype': self._get_subtype(ent.label_, hipaa_type)
+                        })
+                    else:
+                        results.append({
+                            'type': hipaa_type,
+                            'value': ent.text,
+                            'start': ent.start_char,
+                            'end': ent.end_char,
+                            'confidence': confidence,
+                            'source': 'ner',
+                            'subtype': self._get_subtype(ent.label_, hipaa_type)
+                        })
         
         return results
     

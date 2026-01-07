@@ -60,6 +60,18 @@ class Pseudonymizer:
             phi_type = detection['type']
             value = detection['value']
             
+            # Handle name prefixes (Dr., Mr., Mrs., Ms., etc.) - extend detection to include prefix
+            if phi_type == 'name' and start >= 3:
+                # Check for common prefixes before the name
+                prefixes = ['dr. ', 'mr. ', 'mrs. ', 'ms. ', 'prof. ', 'professor ']
+                for prefix in prefixes:
+                    prefix_len = len(prefix)
+                    if start >= prefix_len:
+                        prefix_start = start - prefix_len
+                        if text[prefix_start:start].lower() == prefix:
+                            start = prefix_start
+                            break
+            
             # Generate or retrieve pseudonym
             pseudonym = self._get_pseudonym(value, phi_type)
             

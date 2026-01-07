@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hipaa-anonymizer-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Add any environment variables here
+      # - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      # Mount models directory if you have local models
+      - ./models:/app/models:ro
+      # Mount data directory if needed
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s  # Give more time for initial startup
+    networks:
+      - hipaa-network
+
+networks:
+  hipaa-network:
+    driver: bridge
+

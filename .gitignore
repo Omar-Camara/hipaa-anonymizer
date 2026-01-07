@@ -14,6 +14,7 @@ data/raw/*
 !data/raw/.gitkeep
 models/*.bin
 models/*.pt
+models/*.gguf
 !models/.gitkeep
 
 # MLflow
@@ -37,14 +38,38 @@ Thumbs.db
 # Context and Setup Files
 CONTEXT.md
 PROJECT_CONTEXT.md
-docs/
 GITHUB_SETUP.md
 COMMIT_MESSAGE.md
 COMMIT_TIER3.md
 
-# Scripts
-scripts/setup_git.sh
-scripts/commit_tier2.sh
-scripts/setup_venv.sh
+# Documentation - exclude internal/planning docs only
+# Keep essential: API_GUIDE.md, API_TESTING.md, DOCKER_SETUP.md, GRADIO_UI.md,
+#                 HIPAA_COVERAGE.md, TIER2_SETUP.md, TIER3_SETUP.md, VENV_SETUP.md,
+#                 HUGGINGFACE_ACCESS.md, GGUF_SETUP.md, GGUF_QUICKSTART.md,
+#                 TIER3_TROUBLESHOOTING.md, MODEL_FORMATS.md
+docs/TIER2_PLAN.md
+docs/TIER3_PLAN.md
+docs/MODEL_COMPARISON.md
+docs/NER_MODEL_NOTES.md
+docs/CPU_PERFORMANCE.md
+docs/TESTING_GUIDE.md
+
+# Scripts - exclude optional/testing scripts
+# Keep essential: run_gradio.py, test_api.py, download_gguf_models.py, 
+#                 install_spacy_model.sh, test_detector.py, test_anonymization.py
+scripts/quick_api_test.py
+scripts/quick_tier3_test.py
+scripts/test_script.py
+scripts/test_tier3*.py
+scripts/test_ner*.py
+scripts/test_both_models.py
 scripts/debug_ner.py
 scripts/check_python_env.py
+scripts/check_docker_logs.sh
+scripts/docker_troubleshoot.sh
+scripts/rebuild_docker.sh
+scripts/prepare_commit.sh
+scripts/commit_tier2.sh
+scripts/setup_git.sh
+scripts/install_ner_model.sh
+scripts/setup_venv.sh

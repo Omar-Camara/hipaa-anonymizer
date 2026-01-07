@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Data (exclude large files)
+data/raw/*
+!data/raw/.gitkeep
+models/*.bin
+models/*.pt
+models/*.gguf
+!models/.gitkeep
+
+# MLflow
+mlflow/mlruns/
+mlruns/
+
+# Secrets
+.env
+*.key
+credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Scripts (not needed in production)
+scripts/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Context files
+CONTEXT.md
+PROJECT_CONTEXT.md
+GITHUB_SETUP.md
+COMMIT_*.md
+

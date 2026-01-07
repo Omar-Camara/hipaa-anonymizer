@@ -1,11 +1,16 @@
 # Core ML/NLP
-transformers>=4.35.0  # Required for Tier 3 (SLM validation)
-torch>=2.1.0  # Required for Tier 3 (SLM validation)
+transformers>=4.35.0  # Required for Tier 3 (SLM validation) - standard format
+torch>=2.1.0  # Required for Tier 3 (SLM validation) - standard format
 spacy>=3.7.0
 sentencepiece>=0.1.99
 
+# Optional: For Tier 3 GGUF models (better CPU performance)
+# llama-cpp-python>=0.2.0  # Uncomment for GGUF support (2x faster on CPU)
+# huggingface-hub>=0.17.1  # Uncomment for downloading GGUF models
+
 # Optional: For Tier 3 model quantization (faster CPU inference)
-# bitsandbytes>=0.41.0  # Uncomment for 8-bit quantization support
+# bitsandbytes>=0.41.0  # Uncomment for 8-bit quantization support (standard format)
+# accelerate>=0.26.0  # Required with bitsandbytes
 
 # Biomedical NER (scispaCy)
 # Install with: pip install scispacy
@@ -36,6 +41,7 @@ scikit-learn>=1.3.0
 # Testing
 pytest>=7.4.0
 pytest-cov>=4.1.0
+requests>=2.31.0  # For API testing
 
 # Utilities
 python-dotenv>=1.0.0
